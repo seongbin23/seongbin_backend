@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>매장 관리</title>
+</head>
+<body>
+<h1>매장 등록</h1>
+<form id="storeForm">
+  이름: <input type="text" id="name"><br>
+  주소: <input type="text" id="address"><br>
+  위도: <input type="text" id="latitude"><br>
+  경도: <input type="text" id="longitude"><br>
+  <button type="button" onclick="createStore()">등록</button>
+</form>
+
+<h1>매장 목록 (거리 순)</h1>
+<input type="text" id="userLat" placeholder="내 위도">
+<input type="text" id="userLng" placeholder="내 경도">
+<button onclick="loadStores()">조회</button>
+
+<ul id="storeList"></ul>
+
+<script>
+  function createStore() {
+      const store = {
+          name: document.getElementById('name').value,
+          address: document.getElementById('address').value,
+          latitude: parseFloat(document.getElementById('latitude').value),
+          longitude: parseFloat(document.getElementById('longitude').value)
+      };
+
+      fetch('/stores', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(store)
+      }).then(res => res.json())
+        .then(data => {
+            alert('등록 완료: ' + data.name);
+            loadStores();
+        });
+  }
+
+  function loadStores() {
+      const lat = document.getElementById('userLat').value;
+      const lng = document.getElementById('userLng').value;
+
+      fetch(`/stores/by-distance?userLat=${lat}&userLng=${lng}`)
+          .then(res => res.json())
+          .then(data => {
+              const list = document.getElementById('storeList');
+              list.innerHTML = '';
+              data.forEach(store => {
+                  const li = document.createElement('li');
+                  li.innerHTML = `<a href="/stores/${store.id}">${store.name} (${store.address})</a>`;
+                  list.appendChild(li);
+              });
+          });
+  }
+</script>
+</body>
+</html>
