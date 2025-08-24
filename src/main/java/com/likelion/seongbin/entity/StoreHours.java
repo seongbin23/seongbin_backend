@@ -1,5 +1,6 @@
 package com.likelion.seongbin.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class StoreHours {
 
     @ManyToOne
     @JoinColumn(name = "store_id")
+    @JsonBackReference // 순환 참조 방지
     private Store store;
 
     private String dayOfWeek; // MONDAY, TUESDAY ...

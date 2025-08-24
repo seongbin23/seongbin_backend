@@ -1,5 +1,6 @@
 package com.likelion.seongbin.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -28,8 +29,14 @@ public class Store {
     private Double longitude;
     private String imageUrl;
     private LocalDateTime createdAt;
+    private String crowdLevel;
 
-    // Store와 StoreHours 1:N 관계
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference  // 순환 참조 방지
     private List<StoreHours> storeHours;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

@@ -3,34 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <title>매장 관리</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
+    input[type="time"] { width: 80px; }
+    button { margin-top: 10px; }
+  </style>
 </head>
 <body>
+
 <h1>매장 등록</h1>
 <form id="storeForm">
   이름: <input type="text" id="name"><br>
   주소: <input type="text" id="address"><br>
   위도: <input type="text" id="latitude"><br>
   경도: <input type="text" id="longitude"><br>
+  이미지 URL: <input type="text" id="imageUrl"><br><br>
+
+  <label for="crowdLevel">혼잡도</label>
+  <select id="crowdLevel">
+    <option value="여유">여유</option>
+    <option value="보통">보통</option>
+    <option value="혼잡">혼잡</option>
+  </select>
+
+  <h3>영업시간</h3>
+  <div id="hoursContainer"></div>
+  <button type="button" onclick="addHourRow()">+ 요일 추가</button><br><br>
+
   <button type="button" onclick="createStore()">등록</button>
 </form>
-
-<h1>매장 목록 (거리 순)</h1>
-<input type="text" id="userLat" placeholder="내 위도">
-<input type="text" id="userLng" placeholder="내 경도">
-<button onclick="loadStores()">조회</button>
 
 <ul id="storeList"></ul>
 
 <script>
+  const daysOfWeek = ["월요일","화요일","수요일","목요일","금요일","토요일","일요일"];
+
+  function addHourRow() {
+      const container = document.getElementById("hoursContainer");
+      const div = document.createElement("div");
+      div.style.marginBottom = "5px";
+      div.innerHTML = `
+          요일: <select class="dayOfWeek">
+              ${daysOfWeek.map(day => `<option value="${day}">${day}</option>`).join('')}
+          </select>
+          영업여부: <input type="checkbox" class="isOpen" checked>
+          오픈: <input type="time" class="openTime" value="09:00">
+          마감: <input type="time" class="closeTime" value="21:00">
+          <button type="button" onclick="removeRow(this)">삭제</button>
+      `;
+      container.appendChild(div);
+  }
+
+  function removeRow(btn) {
+      btn.parentElement.remove();
+  }
+
   function createStore() {
+  const crowdLevelValue = document.getElementById('crowdLevel').value;
+  console.log('선택된 혼잡도:', crowdLevelValue);
       const store = {
           name: document.getElementById('name').value,
           address: document.getElementById('address').value,
           latitude: parseFloat(document.getElementById('latitude').value),
-          longitude: parseFloat(document.getElementById('longitude').value)
+          longitude: parseFloat(document.getElementById('longitude').value),
+          imageUrl: document.getElementById('imageUrl').value,
+          crowdLevel: crowdLevelValue,
+          storeHours: []
       };
 
-      fetch('/stores', {
+      document.querySelectorAll("#hoursContainer div").forEach(div => {
+          store.storeHours.push({
+              dayOfWeek: div.querySelector(".dayOfWeek").value,
+              isOpen: div.querySelector(".isOpen").checked,
+              openTime: div.querySelector(".openTime").value,
+              closeTime: div.querySelector(".closeTime").value
+          });
+      });
+
+
+      fetch('/stores/api', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(store)
@@ -45,18 +97,22 @@
       const lat = document.getElementById('userLat').value;
       const lng = document.getElementById('userLng').value;
 
-      fetch(`/stores/by-distance?userLat=${lat}&userLng=${lng}`)
+      fetch(`/stores/api?userLat=${lat}&userLng=${lng}`)
           .then(res => res.json())
           .then(data => {
               const list = document.getElementById('storeList');
               list.innerHTML = '';
               data.forEach(store => {
                   const li = document.createElement('li');
-                  li.innerHTML = `<a href="/stores/${store.id}">${store.name} (${store.address})</a>`;
+                  li.innerHTML = `<a href="/stores/api/${store.id}">${store.name} (${store.address})</a>`;
                   list.appendChild(li);
               });
           });
   }
+
+
+  addHourRow();
 </script>
+
 </body>
 </html>

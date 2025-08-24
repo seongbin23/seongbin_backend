@@ -3,46 +3,50 @@ package com.likelion.seongbin.controller;
 import com.likelion.seongbin.entity.Store;
 import com.likelion.seongbin.repository.StoreRepository;
 import com.likelion.seongbin.service.StoreService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
-@RequestMapping("/stores")
+@RequestMapping("/stores/api")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5500")
 public class StoreController {
 
     private final StoreRepository storeRepository;
     private final StoreService storeService;
 
-    public StoreController(StoreRepository storeRepository, StoreService storeService) {
-        this.storeRepository = storeRepository;
-        this.storeService = storeService;
-    }
-
-    // 전체 매장 조회
-    @GetMapping
-    public List<Store> getAllStores() {
-        return storeRepository.findAll();
-    }
-
-    // 거리 기준 매장 조회
-    @GetMapping("/by-distance")
-    public List<Store> getStoresByDistance(
-            @RequestParam(required = false) Double userLat,
-            @RequestParam(required = false) Double userLng) {
-        if (userLat == null || userLng == null) {
-            throw new IllegalArgumentException("userLat와 userLng는 필수 값입니다.");
-        }
-        return storeService.getStoresByDistance(userLat, userLng);
-    }
-
-    // 매장 등록
+    // 1. 매장 등록
     @PostMapping
     public Store createStore(@RequestBody Store store) {
-        // id가 null이면 시퀀스 또는 자동 생성 필요
+        if (store.getStoreHours() != null) {
+            store.getStoreHours().forEach(hour -> hour.setStore(store));
+        }
         return storeRepository.save(store);
     }
 
-    // 매장 상세 조회
+    // 2. 매장 목록 조회
+    @GetMapping
+    public List<Store> getStores(@RequestParam(required = false) Double userLat,
+                                 @RequestParam(required = false) Double userLng) {
+
+        List<Store> stores;
+
+        if (userLat != null && userLng != null) {
+            stores = storeService.getStoresByDistance(userLat, userLng, 1);
+            stores.sort((a, b) -> Double.compare(
+                    storeService.distance(userLat, userLng, a.getLatitude(), a.getLongitude()),
+                    storeService.distance(userLat, userLng, b.getLatitude(), b.getLongitude())
+            ));
+        } else {
+            stores = storeRepository.findAll();
+        }
+
+        return stores;
+    }
+
+    // 3. 매장 상세 조회
     @GetMapping("/{id}")
     public Store getStore(@PathVariable Long id) {
         return storeRepository.findById(id)
