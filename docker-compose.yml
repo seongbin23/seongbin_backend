@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  oracle-db:
+    image: gvenzl/oracle-xe
+    container_name: oracle-db
+    environment:
+      - ORACLE_PASSWORD=1234
+    ports:
+      - "1521:1521"
+    networks:
+      - mynetwork
+
+  app:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521/XE
+      - SPRING_DATASOURCE_USERNAME=YOUR_USERNAME
+      - SPRING_DATASOURCE_PASSWORD=YOUR_PASSWORD
+    depends_on:
+      - oracle-db
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
