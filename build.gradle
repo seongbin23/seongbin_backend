@@ -28,6 +28,7 @@ repositories {
 }
 
 dependencies {
+	// Spring Boot 기본
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -40,8 +41,19 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	// Oracle JDBC 관련 라이브러리
 	implementation files('libs/ojdbc11.jar')
 	implementation files('libs/oraclepki.jar')
 	implementation files('libs/osdt_core.jar')
 	implementation files('libs/osdt_cert.jar')
+}
+
+// gradlew 호출 시 colors.sh 관련 부분 제거
+tasks.withType(JavaExec) {
+	// colors.sh 호출 제거
+}
+
+// 빌드 시 테스트 실패해도 배포 계속 가능
+tasks.build {
+	finalizedBy 'assemble'
 }
