@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/stores/api")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5500")
+@CrossOrigin(origins = "https://howseat.duckdns.org/")
 public class StoreController {
 
     private final StoreRepository storeRepository;
